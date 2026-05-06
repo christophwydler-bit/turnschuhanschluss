@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👟 Turnschuhanschluss</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #ddd9d2;
+    --text: #1a1814;
+    --muted: #6b6760;
+    --accent: #d4520a;
+    --accent-light: #fdf0e8;
+    --green: #2d7a3a;
+    --green-light: #eaf4ec;
+    --amber: #a06010;
+    --amber-light: #fdf5e0;
+    --shoe: #d4520a;
+    --shoe-light: #fdf0e8;
+    --radius: 10px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  header p {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .field-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  input[type=text], input[type=date], input[type=time] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus { border-color: var(--accent); }
+
+  .station-row {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 8px;
+    align-items: end;
+    margin-bottom: 1rem;
+  }
+
+  .time-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .swap-btn {
+    height: 38px;
+    width: 40px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .swap-btn:hover { background: var(--border); color: var(--text); }
+
+  .slider-section label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .slider-section label span:first-child {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .slider-section label span:last-child {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    margin-bottom: 6px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
+  .slider-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .search-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.01em;
+  }
+  .search-btn:hover { opacity: 0.88; }
+  .search-btn:active { transform: scale(0.99); }
+  .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Autocomplete */
+  .ac-wrapper { position: relative; }
+  .ac-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .ac-item {
+    padding: 9px 12px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: var(--surface2); }
+  .ac-meta { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+
+  /* Results */
+  #results { margin-top: 1.5rem; }
+
+  .status-bar {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: var(--mono);
+  }
+
+  .conn-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .conn-card.has-shoe { border-color: #f0997b; }
+
+  .conn-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .conn-times {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .conn-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .conn-dur {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .badge-shoe { background: var(--shoe-light); color: var(--shoe); }
+  .badge-ok   { background: var(--green-light); color: var(--green); }
+  .badge-tight { background: var(--amber-light); color: var(--amber); }
+
+  .divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  .legs { display: flex; flex-direction: column; gap: 4px; }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+
+  .leg-line {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .transfer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    margin-left: 8px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .transfer.shoe { background: var(--shoe-light); color: var(--shoe); }
+  .transfer.tight { background: var(--amber-light); color: var(--amber); }
+  .transfer.ok { color: var(--green); background: var(--green-light); }
+
+  .loading {
+    text-align: center;
+    padding: 3rem 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error {
+    background: var(--shoe-light);
+    color: var(--shoe);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    border: 1px solid #f0997b;
+  }
+
+  .api-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border-left: 3px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>👟 Turnschuhanschluss</h1>
+    <p>Fahrplanauskunft Schweiz — inklusive inoffizieller Anschlüsse</p>
+  </header>
+
+  <div class="card">
+    <div class="station-row">
+      <div>
+        <span class="field-label">Von</span>
+        <div class="ac-wrapper">
+          <input type="text" id="from" placeholder="z.B. Zürich HB" autocomplete="off" />
+          <div class="ac-list" id="from-ac"></div>
+        </div>
+      </div>
+      <button class="swap-btn" id="swapBtn" title="Tauschen">⇄</button>
+      <div>
+        <span class="field-label">Nach</span>
+        <div class="ac-wrapper">
+          <input type="text" id="to" placeholder="z.B. Bern" autocomplete="off" />
+          <div class="ac-list" id="to-ac"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="time-row">
+      <div>
+        <span class="field-label">Datum</span>
+        <input type="date" id="date" />
+      </div>
+      <div>
+        <span class="field-label">Abfahrt ab</span>
+        <input type="time" id="time" value="08:00" />
+      </div>
+    </div>
+
+    <div class="slider-section">
+      <label>
+        <span>Meine max. Umsteigezeit</span>
+        <span id="sliderVal">4 Min.</span>
+      </label>
+      <input type="range" id="slider" min="1" max="20" value="4" step="1" />
+      <div class="slider-hint">
+        Alles <strong>unter</strong> diesem Wert gilt als Turnschuhanschluss 👟 — du musst sprinten!
+        Offizielle Mindestumsteigezeiten: je nach Bahnhof 2–5 Min.
+      </div>
+    </div>
+  </div>
+
+  <button class="search-btn" id="searchBtn">Verbindungen suchen</button>
+
+  <div class="api-note">
+    Daten von <strong>transport.opendata.ch</strong> — offizielle SBB / ÖV Schweiz Fahrplandaten.
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+const API = 'https://transport.opendata.ch/v1';
+
+const fromEl = document.getElementById('from');
+const toEl = document.getElementById('to');
+const fromAc = document.getElementById('from-ac');
+const toAc = document.getElementById('to-ac');
+const dateEl = document.getElementById('date');
+const timeEl = document.getElementById('time');
+const sliderEl = document.getElementById('slider');
+const sliderVal = document.getElementById('sliderVal');
+const searchBtn = document.getElementById('searchBtn');
+const resultsDiv = document.getElementById('results');
+
+// Set today's date
+const now = new Date();
+dateEl.value = now.toISOString().split('T')[0];
+
+sliderEl.addEventListener('input', () => {
+  sliderVal.textContent = sliderEl.value + ' Min.';
+});
+
+document.getElementById('swapBtn').addEventListener('click', () => {
+  const t = fromEl.value; fromEl.value = toEl.value; toEl.value = t;
+});
+
+// --- Autocomplete ---
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+
+function setupAC(input, list) {
+  let active = -1;
+  let items = [];
+
+  async function fetchAC(q) {
+    if (q.length < 2) { list.style.display = 'none'; return; }
+    try {
+      const url = `${API}/locations?query=${encodeURIComponent(q)}&type=station`;
+      const res = await fetch(url);
+      const data = await res.json();
+      items = (data.stations || []).filter(s => s.name).slice(0, 8);
+      renderAC();
+    } catch(e) {
+      list.style.display = 'none';
+    }
+  }
+
+  function renderAC() {
+    list.innerHTML = '';
+    if (!items.length) { list.style.display = 'none'; return; }
+    items.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.className = 'ac-item';
+      div.innerHTML = `<div>${s.name}</div>${s.coordinate ? `<div class="ac-meta">${s.id || ''}</div>` : ''}`;
+      div.addEventListener('mousedown', e => {
+        e.preventDefault();
+        input.value = s.name;
+        list.style.display = 'none';
+      });
+      list.appendChild(div);
+    });
+    list.style.display = 'block';
+    active = -1;
+  }
+
+  input.addEventListener('input', debounce(() => fetchAC(input.value.trim()), 280));
+
+  input.addEventListener('keydown', e => {
+    const els = list.querySelectorAll('.ac-item');
+    if (e.key === 'ArrowDown') { active = Math.min(active + 1, els.length - 1); highlight(els); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { active = Math.max(active - 1, 0); highlight(els); e.preventDefault(); }
+    else if (e.key === 'Enter' && active >= 0) { input.value = items[active].name; list.style.display = 'none'; e.preventDefault(); }
+    else if (e.key === 'Escape') { list.style.display = 'none'; }
+  });
+
+  function highlight(els) {
+    els.forEach((el, i) => el.classList.toggle('active', i === active));
+  }
+
+  document.addEventListener('click', e => {
+    if (!input.contains(e.target) && !list.contains(e.target)) list.style.display = 'none';
+  });
+}
+
+setupAC(fromEl, fromAc);
+setupAC(toEl, toAc);
+
+// --- Helpers ---
+function fmtTime(iso) {
+  if (!iso) return '?';
+  const d = new Date(iso);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function diffMin(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / 60000);
+}
+
+function fmtDur(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? h + 'h' + (m ? ' ' + m + 'min' : '') : m + ' min';
+}
+
+// --- Render ---
+function render(connections, threshold) {
+  if (!connections || !connections.length) {
+    resultsDiv.innerHTML = '<div class="error">Keine Verbindungen gefunden. Bitte Haltestellen prüfen.</div>';
+    return;
+  }
+
+  let html = `<div class="status-bar">${connections.length} Verbindungen gefunden &mdash; Turnschuhanschluss-Limit: ${threshold} Min.</div>`;
+
+  connections.forEach(conn => {
+    const secs = conn.sections || [];
+    const depISO = secs[0]?.departure?.departure;
+    const arrISO = secs[secs.length - 1]?.arrival?.arrival;
+    const total = depISO && arrISO ? diffMin(depISO, arrISO) : null;
+
+    let hasShoe = false, hasTight = false;
+    let legsHtml = '';
+
+    secs.forEach((sec, i) => {
+      const line = sec.journey?.name || sec.journey?.category || '🚶 Fussweg';
+      const fromName = sec.departure?.station?.name || '?';
+      const toName = sec.arrival?.station?.name || '?';
+      const dt = fmtTime(sec.departure?.departure);
+      const at = fmtTime(sec.arrival?.arrival);
+
+      legsHtml += `<div class="leg">
+        <span class="leg-line">${line}</span>
+        <span>${dt} ${fromName} → ${at} ${toName}</span>
+      </div>`;
+
+      if (i < secs.length - 1) {
+        const next = secs[i + 1];
+        const a = sec.arrival?.departure || sec.arrival?.arrival;
+        const b = next.departure?.departure;
+        const station = sec.arrival?.station?.name || '?';
+        if (a && b) {
+          const diff = diffMin(a, b);
+          let cls, icon, label;
+          if (diff < threshold) {
+            cls = 'shoe'; icon = '👟'; label = 'Turnschuhanschluss'; hasShoe = true;
+          } else if (diff <= threshold + 2) {
+            cls = 'tight'; icon = '⚡'; label = 'Knapp'; hasTight = true;
+          } else {
+            cls = 'ok'; icon = '✓'; label = 'Bequem';
+          }
+          legsHtml += `<div class="transfer ${cls}">${icon} ${station}: ${diff} Min. &mdash; ${label}</div>`;
+        }
+      }
+    });
+
+    const badge = hasShoe
+      ? '<span class="badge badge-shoe">👟 Turnschuhanschluss</span>'
+      : hasTight
+      ? '<span class="badge badge-tight">⚡ Knapp</span>'
+      : '<span class="badge badge-ok">✓ Bequem</span>';
+
+    html += `<div class="conn-card ${hasShoe ? 'has-shoe' : ''}">
+      <div class="conn-header">
+        <span class="conn-times">${fmtTime(depISO)} → ${fmtTime(arrISO)}</span>
+        <div class="conn-meta">
+          ${total ? `<span class="conn-dur">${fmtDur(total)}</span>` : ''}
+          ${badge}
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="legs">${legsHtml}</div>
+    </div>`;
+  });
+
+  resultsDiv.innerHTML = html;
+}
+
+// --- Search ---
+searchBtn.addEventListener('click', async () => {
+  const from = fromEl.value.trim();
+  const to = toEl.value.trim();
+  const date = dateEl.value;
+  const time = timeEl.value;
+  const threshold = parseInt(sliderEl.value);
+
+  if (!from || !to) {
+    resultsDiv.innerHTML = '<div class="error">Bitte Start und Ziel eingeben.</div>';
+    return;
+  }
+
+  resultsDiv.innerHTML = '<div class="loading"><span class="spinner"></span>Verbindungen werden geladen…</div>';
+  searchBtn.disabled = true;
+
+  try {
+    const params = new URLSearchParams({ from, to, date, time, limit: 6 });
+    const url = `${API}/connections?${params}`;
+    const res = await fetch(url);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    render(data.connections || [], threshold);
+  } catch(e) {
+    resultsDiv.innerHTML = `<div class="error">
+      <strong>Fehler:</strong> ${e.message}<br><br>
+      Tipp: Falls du diese Datei direkt im Browser öffnest (file://), 
+      funktioniert die API wegen CORS eventuell nicht in Firefox. 
+      Probiere Chrome oder starte einen lokalen Server:
+      <br><code style="font-size:0.8em">python3 -m http.server 8080</code>
+    </div>`;
+  } finally {
+    searchBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
